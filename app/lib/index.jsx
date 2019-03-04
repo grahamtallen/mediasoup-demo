@@ -8,7 +8,7 @@ import {
 	createStore as createReduxStore
 } from 'redux';
 import thunk from 'redux-thunk';
-import { createLogger as createReduxLogger } from 'redux-logger';
+// import { createLogger as createReduxLogger } from 'redux-logger';
 import randomString from 'random-string';
 import * as faceapi from 'face-api.js';
 import Logger from './Logger';
@@ -25,18 +25,18 @@ import Room from './components/Room';
 const logger = new Logger();
 const reduxMiddlewares = [ thunk ];
 
-if (process.env.NODE_ENV === 'development')
-{
-	const reduxLogger = createReduxLogger(
-		{
-			duration  : true,
-			timestamp : false,
-			level     : 'log',
-			logErrors : true
-		});
+// if (process.env.NODE_ENV === 'development')
+// {
+// 	const reduxLogger = createReduxLogger(
+// 		{
+// 			duration  : true,
+// 			timestamp : false,
+// 			level     : 'log',
+// 			logErrors : true
+// 		});
 
-	reduxMiddlewares.push(reduxLogger);
-}
+// 	reduxMiddlewares.push(reduxLogger);
+// }
 
 let roomClient;
 const store = createReduxStore(
@@ -71,8 +71,9 @@ async function run()
 	const forceTcp = urlParser.query.forceTcp === 'true';
 	const spy = urlParser.query.spy === 'true';
 	const forceH264 = urlParser.query.forceH264 === 'true';
-	const faceDetection = urlParser.query.faceDetection === 'true';
 	const info = urlParser.query.info === 'true';
+	const faceDetection = urlParser.query.faceDetection === 'true';
+	const externalVideo = urlParser.query.externalVideo === 'true';
 
 	// Enable face detection on demand.
 	if (faceDetection)
@@ -136,7 +137,17 @@ async function run()
 		stateActions.setMe({ peerId, displayName, displayNameSet, device }));
 
 	roomClient = new RoomClient(
-		{ roomId, peerId, displayName, device, useSimulcast, forceTcp, spy, forceH264 });
+		{
+			roomId,
+			peerId,
+			displayName,
+			device,
+			useSimulcast,
+			forceTcp,
+			spy,
+			forceH264,
+			externalVideo
+		});
 
 	// NOTE: For debugging.
 	window.CLIENT = roomClient;

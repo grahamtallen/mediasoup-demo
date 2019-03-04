@@ -10,7 +10,7 @@
     "lint": "eslint -c .eslintrc.js --ext .js,.jsx gulpfile.js lib"
   },
   "dependencies": {
-    "@babel/runtime": "^7.3.1",
+    "@babel/runtime": "^7.3.4",
     "bowser": "^2.1.0",
     "classnames": "^2.2.6",
     "clipboard-copy": "^2.0.1",
@@ -24,9 +24,9 @@
     "prop-types": "^15.7.2",
     "protoo-client": "^4.0.1",
     "random-string": "^0.2.0",
-    "react": "^16.8.2",
-    "react-dom": "^16.8.2",
-    "react-redux": "^6.0.0",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "react-redux": "^6.0.1",
     "react-spinner": "^0.2.7",
     "react-tooltip": "^3.9.2",
     "react-transition-group": "^2.5.3",
@@ -37,10 +37,10 @@
     "url-parse": "^1.4.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.3",
-    "@babel/plugin-proposal-object-rest-spread": "^7.3.2",
-    "@babel/plugin-transform-runtime": "^7.2.0",
-    "@babel/preset-env": "^7.3.1",
+    "@babel/core": "^7.3.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.3.4",
+    "@babel/plugin-transform-runtime": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
     "@babel/preset-react": "^7.0.0",
     "babel-plugin-jsx-control-statements": "^4.0.0",
     "babelify": "^10.0.0",

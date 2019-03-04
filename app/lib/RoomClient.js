@@ -20,6 +20,8 @@ const VIDEO_ENCODINGS =
 	{ maxBitrate: 900000 }
 ];
 
+const EXTERNAL_VIDEO_SRC = '/resources/videos/video-audio-stereo.mp4';
+
 const logger = new Logger('RoomClient');
 
 let store;
@@ -44,7 +46,8 @@ export default class RoomClient
 			useSimulcast,
 			forceTcp,
 			spy,
-			forceH264
+			forceH264,
+			externalVideo
 		}
 	)
 	{
@@ -75,6 +78,28 @@ export default class RoomClient
 		// Whether we want to force H264 codec.
 		// @type {Boolean}
 		this._forceH264 = forceH264;
+
+		// External video.
+		// @type {HTMLVideoElement}
+		this._externalVideo = null;
+
+		// MediaStream of the external video.
+		// @type {MediaStream}
+		this._externalVideoStream = null;
+
+		if (externalVideo)
+		{
+			this._externalVideo = document.createElement('video');
+
+			this._externalVideo.controls = true;
+			this._externalVideo.muted = true;
+			this._externalVideo.loop = true;
+			this._externalVideo.setAttribute('playsinline', '');
+			this._externalVideo.src = EXTERNAL_VIDEO_SRC;
+
+			this._externalVideo.play()
+				.catch((error) => logger.warn('externalVideo.play() failed:%o', error));
+		}
 
 		// Whether simulcast should be used.
 		// @type {Boolean}
@@ -225,12 +250,23 @@ export default class RoomClient
 						producerPaused
 					} = request.data;
 
+					let codecOptions;
+
+					if (kind === 'audio')
+					{
+						codecOptions =
+						{
+							opusStereo : 1
+						};
+					}
+
 					const consumer = await this._recvTransport.consume(
 						{
 							id,
 							producerId,
 							kind,
 							rtpParameters,
+							codecOptions,
 							appData : { ...appData, peerId } // Trick.
 						});
 
@@ -434,14 +470,30 @@ export default class RoomClient
 
 		try
 		{
-			logger.debug('enableMic() | calling getUserMedia()');
+			if (!this._externalVideo)
+			{
+				logger.debug('enableMic() | calling getUserMedia()');
 
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-			track = stream.getAudioTracks()[0];
+				track = stream.getAudioTracks()[0];
+			}
+			else
+			{
+				const stream = await this._getExternalVideoStream();
 
-			this._micProducer =
-				await this._sendTransport.produce({ track, appData: { source: 'mic' } });
+				track = stream.getAudioTracks()[0].clone();
+			}
+
+			this._micProducer = await this._sendTransport.produce(
+				{
+					track,
+					codecOptions :
+					{
+						opusStereo : 1
+					},
+					appData : { source: 'mic' }
+				});
 
 			store.dispatch(stateActions.addProducer(
 				{
@@ -580,31 +632,44 @@ export default class RoomClient
 		}
 
 		let track;
+		let device;
 
 		store.dispatch(
 			stateActions.setWebcamInProgress(true));
 
 		try
 		{
-			await this._updateWebcams();
+			if (!this._externalVideo)
+			{
+				await this._updateWebcams();
+				device = this._webcam.device;
 
-			const { device, resolution } = this._webcam;
+				const { resolution } = this._webcam;
 
-			if (!device)
-				throw new Error('no webcam devices');
+				if (!device)
+					throw new Error('no webcam devices');
 
-			logger.debug('enableWebcam() | calling getUserMedia()');
+				logger.debug('enableWebcam() | calling getUserMedia()');
 
-			const stream = await navigator.mediaDevices.getUserMedia(
-				{
-					video :
+				const stream = await navigator.mediaDevices.getUserMedia(
 					{
-						deviceId : { exact: device.deviceId },
-						...VIDEO_CONSTRAINS[resolution]
-					}
-				});
+						video :
+						{
+							deviceId : { exact: device.deviceId },
+							...VIDEO_CONSTRAINS[resolution]
+						}
+					});
 
-			track = stream.getVideoTracks()[0];
+				track = stream.getVideoTracks()[0];
+			}
+			else
+			{
+				device = { label: 'external video' };
+
+				const stream = await this._getExternalVideoStream();
+
+				track = stream.getVideoTracks()[0].clone();
+			}
 
 			if (this._useSimulcast)
 			{
@@ -1172,7 +1237,7 @@ export default class RoomClient
 
 				const devicesCookie = cookiesManager.getDevices();
 
-				if (!devicesCookie || devicesCookie.webcamEnabled)
+				if (!devicesCookie || devicesCookie.webcamEnabled || this._externalVideo)
 					this.enableWebcam();
 			}
 		}
@@ -1291,5 +1356,27 @@ export default class RoomClient
 					text : `Error resuming Consumer: ${error}`
 				}));
 		}
+	}
+
+	async _getExternalVideoStream()
+	{
+		if (this._externalVideoStream)
+			return this._externalVideoStream;
+
+		if (this._externalVideo.readyState < 3)
+		{
+			await new Promise((resolve) => (
+				this._externalVideo.addEventListener('canplay', resolve)
+			));
+		}
+
+		if (this._externalVideo.captureStream)
+			this._externalVideoStream = this._externalVideo.captureStream();
+		else if (this._externalVideo.mozCaptureStream)
+			this._externalVideoStream = this._externalVideo.mozCaptureStream();
+		else
+			throw new Error('video.captureStream() not supported');
+
+		return this._externalVideoStream;
 	}
 }

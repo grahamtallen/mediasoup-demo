@@ -6,8 +6,11 @@ import Spinner from 'react-spinner';
 import clipboardCopy from 'clipboard-copy';
 import hark from 'hark';
 import * as faceapi from 'face-api.js';
+import Logger from '../Logger';
 import * as appPropTypes from './appPropTypes';
 import EditableInput from './EditableInput';
+
+const logger = new Logger('PeerView');
 
 const tinyFaceDetectorOptions = new faceapi.TinyFaceDetectorOptions(
 	{
@@ -134,11 +137,11 @@ export default class PeerView extends React.Component
 							</If>
 
 							<If condition={audioProducerId && audioScore}>
-								{this._printProducerScore(audioScore)}
+								{this._printProducerScore(audioProducerId, audioScore)}
 							</If>
 
 							<If condition={audioConsumerId && audioScore}>
-								{this._printConsumerScore(audioScore)}
+								{this._printConsumerScore(audioConsumerId, audioScore)}
 							</If>
 						</If>
 
@@ -286,11 +289,11 @@ export default class PeerView extends React.Component
 							</If>
 
 							<If condition={videoProducerId && videoScore}>
-								{this._printProducerScore(videoScore)}
+								{this._printProducerScore(videoProducerId, videoScore)}
 							</If>
 
 							<If condition={videoConsumerId && videoScore}>
-								{this._printConsumerScore(videoScore)}
+								{this._printConsumerScore(videoConsumerId, videoScore)}
 							</If>
 						</If>
 					</div>
@@ -338,8 +341,9 @@ export default class PeerView extends React.Component
 						'is-me' : isMe,
 						hidden  : !videoVisible
 					})}
-					autoPlay
+					autoPlay={false}
 					muted={isMe}
+					controls={!isMe}
 				/>
 
 				<canvas
@@ -414,6 +418,9 @@ export default class PeerView extends React.Component
 				stream.addTrack(videoTrack);
 
 			video.srcObject = stream;
+
+			video.play()
+				.catch((error) => logger.warn('video.play() failed:%o', error));
 
 			if (audioTrack)
 				this._runHark(stream);
@@ -548,12 +555,12 @@ export default class PeerView extends React.Component
 		canvas.height = 0;
 	}
 
-	_printProducerScore(score)
+	_printProducerScore(id, score)
 	{
 		const scores = Array.isArray(score) ? score : [ score ];
 
 		return (
-			<React.Fragment>
+			<React.Fragment key={id}>
 				<p>streams:</p>
 
 				{
@@ -568,12 +575,12 @@ export default class PeerView extends React.Component
 		);
 	}
 
-	_printConsumerScore(score)
+	_printConsumerScore(id, score)
 	{
 		const scores = Array.isArray(score) ? score : [ score ];
 
 		return (
-			<React.Fragment>
+			<React.Fragment key={id}>
 				<p>score:</p>
 
 				{
