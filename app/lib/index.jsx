@@ -151,6 +151,7 @@ async function run()
 
 	// NOTE: For debugging.
 	window.CLIENT = roomClient;
+	window.CC = roomClient;
 
 	render(
 		<Provider store={store}>
