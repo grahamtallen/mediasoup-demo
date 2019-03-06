@@ -45,7 +45,7 @@ const store = createReduxStore(
 	applyReduxMiddleware(...reduxMiddlewares)
 );
 
-RoomClient.init({ store });
+RoomClient.init({ store, forceTcp: true});
 
 const urlParser = new UrlParse(window.location.href, true);
 
