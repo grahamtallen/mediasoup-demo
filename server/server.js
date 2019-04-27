@@ -99,7 +99,7 @@ const httpsServer = https.createServer(tls, (req, res) =>
 	res.end();
 });
 
-httpsServer.listen(3443, '0.0.0.0', () =>
+httpsServer.listen(10443, '0.0.0.0', () =>
 {
 	logger.info('protoo WebSocket server running');
 });
