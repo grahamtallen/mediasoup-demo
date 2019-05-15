@@ -95,11 +95,10 @@ const tls =
 
 const httpsServer = https.createServer(tls, (req, res) =>
 {
-	res.writeHead(404, 'Not Here');
-	res.end();
+	res.end("Ba bump");
 });
 
-httpsServer.listen(3443, '0.0.0.0', () =>
+httpsServer.listen(3443, '127.0.0.1', () =>
 {
 	logger.info('protoo WebSocket server running');
 });
