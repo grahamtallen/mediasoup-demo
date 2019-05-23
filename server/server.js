@@ -12,7 +12,7 @@ console.log('- config.mediasoup.logTags:', config.mediasoup.logTags);
 /* eslint-enable no-console */
 
 const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const url = require('url');
 const protooServer = require('protoo-server');
 const mediasoup = require('mediasoup');
@@ -93,18 +93,18 @@ const tls =
 	key  : fs.readFileSync(config.tls.key)
 };
 
-const httpsServer = https.createServer(tls, (req, res) =>
+const httpServer = http.createServer((req, res) =>
 {
 	res.end("Ba bump");
 });
 
-httpsServer.listen(3443, '127.0.0.1', () =>
+httpServer.listen(3443, '127.0.0.1', () =>
 {
 	logger.info('protoo WebSocket server running');
 });
 
 // Protoo WebSocket server.
-const webSocketServer = new protooServer.WebSocketServer(httpsServer,
+const webSocketServer = new protooServer.WebSocketServer(httpServer,
 	{
 		maxReceivedFrameSize     : 960000, // 960 KBytes.
 		maxReceivedMessageSize   : 960000,
